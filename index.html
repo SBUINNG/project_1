@@ -3,420 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘의 마음 기록장 : 쉼표</title>
-    <!-- 감성적인 명조체와 고딕체 혼용 -->
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Pretendard:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>나만의 가계부</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f4f2ef; /* 차분한 미색 */
+            --primary-blue: #3b82f6;
+            --primary-red: #ef4444;
+            --primary-purple: #8b5cf6;
+            --bg-color: #f8fafc;
             --card-bg: #ffffff;
-            --text-main: #3e3c3a;
-            --text-sub: #8e8a86;
-            --accent: #a7bbc7; /* 새벽 공기 빛 블루 */
-            --point: #e2e2e2;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, sans-serif; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Pretendard', sans-serif;
-            margin: 0;
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; display: flex; justify-content: center; }
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeIn 1s ease-out;
-        }
+        .container { width: 100%; max-width: 800px; }
 
-        header h1 {
-            font-family: 'Nanum Myeongjo', serif;
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
+        header { margin-bottom: 24px; text-align: center; }
+        header h1 { color: var(--text-main); font-size: 1.8rem; }
 
-        header p {
-            font-size: 0.9rem;
-            color: var(--text-sub);
-        }
+        /* Dashboard */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
 
-        /* 입력 카드 박스 */
-        .editor-card {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 450px;
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            margin-bottom: 50px;
-            animation: slideUp 0.8s ease-out;
-        }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
-        .date-display {
-            font-size: 0.85rem;
-            color: var(--accent);
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
+        .card-label { font-size: 0.875rem; color: var(--text-sub); margin-bottom: 8px; }
+        .card-value { font-size: 1.5rem; font-weight: 700; }
+        .value-balance { color: var(--text-main); }
+        .value-income { color: var(--primary-blue); }
+        .value-expense { color: var(--primary-red); }
 
-        .emoji-picker {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 25px;
-        }
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
 
-        .emoji-btn {
-            background: none;
-            border: 2px solid transparent;
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 50px;
-            height: 50px;
-            border-radius: 15px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 10px 10px 0 0; cursor: pointer; font-weight: 600; color: var(--text-sub); }
 
-        .emoji-btn:hover {
-            transform: translateY(-5px);
-            background-color: #f8f9fa;
-        }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary-purple); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 
-        .emoji-btn.active {
-            background-color: #f0f4f7;
-            border-color: var(--accent);
-            transform: scale(1.1);
-        }
+        /* Section Visibility */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
 
-        textarea {
-            width: 100%;
-            border: 1px solid var(--point);
-            border-radius: 12px;
-            padding: 15px;
-            font-family: inherit;
-            font-size: 1rem;
-            resize: none;
-            height: 100px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
+        /* Input Form & Box */
+        .box-section { background: var(--card-bg); padding: 24px; border-radius: 0 16px 16px 16px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
-        textarea:focus {
-            border-color: var(--accent);
-        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 
-        .save-btn {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.3s, transform 0.2s;
-        }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; }
 
-        .save-btn:active {
-            transform: scale(0.98);
-        }
+        .btn-main { grid-column: 1 / -1; padding: 14px; background: var(--text-main); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
-        /* 타임라인 스타일 */
-        .timeline {
-            width: 100%;
-            max-width: 450px;
-            position: relative;
-        }
+        /* Recurring List Styles */
+        .recurring-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f1f5f9; border-radius: 10px; margin-bottom: 10px; }
 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: var(--point);
-        }
+        .btn-add-recurring { background: var(--primary-purple); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
 
-        .diary-item {
-            position: relative;
-            padding-left: 50px;
-            margin-bottom: 30px;
-            animation: fadeIn 0.6s ease-in-out;
-        }
+        /* List & Filter */
+        .list-section { background: var(--card-bg); padding: 24px; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        .diary-item::after {
-            content: '';
-            position: absolute;
-            left: 17px;
-            top: 24px;
-            width: 7px;
-            height: 7px;
-            background: var(--accent);
-            border-radius: 50%;
-        }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
-        .diary-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s;
-        }
+        .filter-btns button { padding: 6px 12px; border: 1px solid var(--border-color); background: none; border-radius: 20px; cursor: pointer; font-size: 0.85rem; margin-left: 4px; }
 
-        .diary-card:hover {
-            transform: translateX(5px);
-        }
+        .filter-btns button.active { background: var(--text-main); color: white; }
 
-        .diary-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
 
-        .diary-info {
-            display: flex;
-            flex-direction: column;
-        }
+        .btn-delete { background: #fee2e2; color: var(--primary-red); border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
 
-        .diary-date {
-            font-size: 0.75rem;
-            color: var(--text-sub);
-        }
+        .chart-container { height: 250px; margin-top: 30px; }
 
-        .diary-emoji {
-            font-size: 1.2rem;
-            margin-top: 4px;
-        }
-
-        .diary-content {
-            font-size: 0.95rem;
-            color: var(--text-main);
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .diary-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            justify-content: flex-end;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            font-size: 0.75rem;
-            color: var(--text-sub);
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .action-btn:hover {
-            color: var(--accent);
-            text-decoration: underline;
-        }
-
-        /* 애니메이션 */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 삭제 애니메이션 */
-        .removing {
-            transform: scale(0.9);
-            opacity: 0;
-            transition: 0.4s;
-        }
+        .admin-controls { display: flex; gap: 8px; margin-bottom: 10px; justify-content: flex-end; }
+        .btn-small { padding: 5px 10px; font-size: 0.7rem; border-radius: 5px; border: none; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
+<div class="container">
     <header>
-        <h1>마음 기록, 쉼표</h1>
-        <p>오늘의 계절은 어떠했나요?</p>
+        <h1>나만의 가계부</h1>
     </header>
 
-    <div class="editor-card">
-        <div class="date-display" id="current-date"></div>
-        <div class="emoji-picker">
-            <button class="emoji-btn" onclick="selectEmoji('😊', this)">😊</button>
-            <button class="emoji-btn" onclick="selectEmoji('😐', this)">😐</button>
-            <button class="emoji-btn" onclick="selectEmoji('😔', this)">😔</button>
-            <button class="emoji-btn" onclick="selectEmoji('😠', this)">😠</button>
-            <button class="emoji-btn" onclick="selectEmoji('✨', this)">✨</button>
+    <div class="dashboard">
+        <div class="card">
+            <div class="card-label">현재 잔액</div>
+            <div class="card-value value-balance" id="total-balance">0원</div>
         </div>
-        <textarea id="diary-input" placeholder="이곳에 당신의 숨을 고르세요..."></textarea>
-        <button class="save-btn" id="save-btn">기록하기</button>
+        <div class="card">
+            <div class="card-label">이번 달 수입</div>
+            <div class="card-value value-income" id="total-income">0원</div>
+        </div>
+        <div class="card">
+            <div class="card-label">이번 달 지출</div>
+            <div class="card-value value-expense" id="total-expense">0원</div>
+        </div>
     </div>
 
-    <div class="timeline" id="diary-timeline">
-        <!-- 기록들이 여기에 추가됩니다 -->
+    <div class="admin-controls">
+        <button class="btn-small" style="background: var(--primary-blue)" onclick="setInitialBalance()">시작 금액 설정</button>
+        <button class="btn-small" style="background: var(--text-sub)" onclick="resetAllData()">전체 삭제</button>
     </div>
 
-    <script>
-        let selectedEmoji = '';
-        let editingId = null;
-        const diaryInput = document.getElementById('diary-input');
-        const saveBtn = document.getElementById('save-btn');
-        const timeline = document.getElementById('diary-timeline');
-        const dateDisplay = document.getElementById('current-date');
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('general')">내역 입력</button>
+        <button class="tab-btn" onclick="openTab('recurring')">고정 지출 관리</button>
+    </div>
 
-        // 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            setCurrentDate();
-            loadDiaries();
+    <section id="general" class="content-section box-section active">
+        <form id="ledger-form" class="form-grid">
+            <select id="type" required>
+                <option value="expense">지출</option>
+                <option value="income">수입</option>
+            </select>
+            <input type="number" id="amount" placeholder="금액 입력" required>
+            <select id="category">
+                <option value="식비">식비</option>
+                <option value="교통">교통</option>
+                <option value="OTT/구독">OTT/구독</option>
+                <option value="쇼핑">쇼핑</option>
+                <option value="여가">여가</option>
+                <option value="주거/통신">주거/통신</option>
+                <option value="기타">기타</option>
+            </select>
+            <input type="date" id="date" required>
+            <input type="text" id="memo" placeholder="내용 메모" style="grid-column: span 2;">
+            <button type="submit" class="btn-main">저장하기</button>
+        </form>
+    </section>
+
+    <section id="recurring" class="content-section box-section">
+        <h4 style="margin-bottom: 15px;">매달 나가는 돈 등록</h4>
+        <form id="recurring-form" class="form-grid" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+            <input type="text" id="rec-memo" placeholder="예: 넷플릭스, 유튜브, 월세" required>
+            <input type="number" id="rec-amount" placeholder="금액" required>
+            <select id="rec-category">
+                <option value="OTT/구독">OTT/구독</option>
+                <option value="주거/통신">주거/통신</option>
+                <option value="식비">식비(정기권)</option>
+                <option value="기타">기타</option>
+            </select>
+            <button type="submit" class="btn-main" style="background: var(--primary-purple);">구독 리스트에 추가</button>
+        </form>
+        <h4 style="margin-bottom: 10px;">나의 구독 목록</h4>
+        <div id="recurring-list-container"></div>
+    </section>
+
+    <section class="list-section">
+        <div class="list-header">
+            <h3>상세 내역</h3>
+            <div class="filter-btns" id="filter-container">
+                <button class="active" data-filter="all">전체</button>
+                <button data-filter="income">수입</button>
+                <button data-filter="expense">지출</button>
+            </div>
+        </div>
+        <div id="transaction-list"></div>
+        <div class="chart-container">
+            <canvas id="expenseChart"></canvas>
+        </div>
+    </section>
+</div>
+
+<script>
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let recurringItems = JSON.parse(localStorage.getItem('recurringItems')) || [];
+    let currentFilter = 'all';
+    let chart = null;
+
+    document.getElementById('date').valueAsDate = new Date();
+
+    function openTab(tabId) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function updateDashboard() {
+        const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+        const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+        const currentBalance = totalIncome - totalExpense;
+
+        const monthIncome = transactions
+            .filter(t => t.type === 'income' && t.category !== '기초자산')
+            .reduce((s, t) => s + t.amount, 0);
+
+        const monthExpense = transactions
+            .filter(t => t.type === 'expense')
+            .reduce((s, t) => s + t.amount, 0);
+
+        document.getElementById('total-balance').textContent = `${currentBalance.toLocaleString()}원`;
+        document.getElementById('total-income').textContent = `${monthIncome.toLocaleString()}원`;
+        document.getElementById('total-expense').textContent = `${monthExpense.toLocaleString()}원`;
+        updateChart();
+    }
+
+    function renderList() {
+        const list = document.getElementById('transaction-list');
+        list.innerHTML = '';
+        const filtered = transactions.filter(t => currentFilter === 'all' ? true : t.type === currentFilter)
+                                   .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        filtered.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'transaction-item';
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:600">${t.memo}</div>
+                    <div style="font-size:0.75rem; color:var(--text-sub)">${t.date} | ${t.category}</div>
+                </div>
+                <div class="item-amount">
+                    <span style="color: ${t.type === 'income' ? 'var(--primary-blue)' : 'var(--primary-red)'}">
+                        ${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()}원
+                    </span>
+                    <button class="btn-delete" onclick="deleteTransaction(${t.id})">삭제</button>
+                </div>
+            `;
+            list.appendChild(div);
         });
+    }
 
-        // 날짜 설정
-        function setCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            dateDisplay.innerText = now.toLocaleDateString('ko-KR', options);
-        }
-
-        // 감정 선택
-        function selectEmoji(emoji, btn) {
-            selectedEmoji = emoji;
-            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        // 기록 저장 (추가 및 수정)
-        saveBtn.addEventListener('click', () => {
-            const content = diaryInput.value.trim();
-            
-            if (!selectedEmoji) {
-                alert('오늘의 감정을 선택해 주세요.');
-                return;
-            }
-            if (!content) {
-                alert('기록할 내용을 적어주세요.');
-                return;
-            }
-
-            let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-
-            if (editingId) {
-                // 수정 모드
-                diaries = diaries.map(item => {
-                    if (item.id === editingId) {
-                        return { ...item, emoji: selectedEmoji, content: content };
-                    }
-                    return item;
-                });
-                editingId = null;
-                saveBtn.innerText = '기록하기';
-            } else {
-                // 신규 저장
-                const newDiary = {
-                    id: Date.now(),
-                    date: new Date().toLocaleString('ko-KR'),
-                    emoji: selectedEmoji,
-                    content: content
-                };
-                diaries.unshift(newDiary);
-            }
-
-            localStorage.setItem('diaries', JSON.stringify(diaries));
-            resetEditor();
-            loadDiaries();
+    function renderRecurringList() {
+        const container = document.getElementById('recurring-list-container');
+        container.innerHTML = recurringItems.length === 0 ? '<p style="color:#999; font-size:0.8rem;">아직 등록된 고정 지출이 없습니다.</p>' : '';
+        recurringItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'recurring-item';
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight:600">${item.memo}</div>
+                    <div style="font-size:0.75rem; color:var(--text-sub)">매달 | ${item.amount.toLocaleString()}원</div>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-add-recurring" onclick="postRecurring(${item.id})">결제 추가</button>
+                    <button class="btn-delete" onclick="deleteRecurring(${item.id})">삭제</button>
+                </div>
+            `;
+            container.appendChild(div);
         });
+    }
 
-        function resetEditor() {
-            diaryInput.value = '';
-            selectedEmoji = '';
-            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
-            editingId = null;
-            saveBtn.innerText = '기록하기';
-        }
+    function postRecurring(id) {
+        const item = recurringItems.find(i => i.id === id);
+        transactions.push({
+            id: Date.now(),
+            type: 'expense',
+            amount: item.amount,
+            category: item.category,
+            date: new Date().toISOString().split('T')[0],
+            memo: `[고정] ${item.memo}`
+        });
+        save();
+        alert(`${item.memo} 내역이 반영되었습니다.`);
+    }
 
-        // 목록 로드
-        function loadDiaries() {
-            const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-            timeline.innerHTML = '';
-
-            diaries.forEach(item => {
-                const element = document.createElement('div');
-                element.className = 'diary-item';
-                element.innerHTML = `
-                    <div class="diary-card">
-                        <div class="diary-header">
-                            <div class="diary-info">
-                                <span class="diary-date">${item.date}</span>
-                                <span class="diary-emoji">${item.emoji}</span>
-                            </div>
-                        </div>
-                        <div class="diary-content">${item.content}</div>
-                        <div class="diary-actions">
-                            <button class="action-btn" onclick="editDiary(${item.id})">수정</button>
-                            <button class="action-btn" onclick="deleteDiary(${item.id}, this)">삭제</button>
-                        </div>
-                    </div>
-                `;
-                timeline.appendChild(element);
+    function setInitialBalance() {
+        const val = prompt("가계부를 시작할 때 보유한 금액을 입력하세요:");
+        if (val && !isNaN(val)) {
+            transactions.push({
+                id: Date.now(),
+                type: 'income',
+                amount: parseInt(val),
+                category: '기초자산',
+                date: new Date().toISOString().split('T')[0],
+                memo: '시작 금액(자산)'
             });
+            save();
         }
+    }
 
-        // 삭제 기능
-        function deleteDiary(id, btn) {
-            if (!confirm('기록을 지우시겠습니까?')) return;
-            
-            const itemElement = btn.closest('.diary-item');
-            itemElement.classList.add('removing');
-            
-            setTimeout(() => {
-                let diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-                diaries = diaries.filter(item => item.id !== id);
-                localStorage.setItem('diaries', JSON.stringify(diaries));
-                loadDiaries();
-            }, 400);
+    document.getElementById('recurring-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        recurringItems.push({
+            id: Date.now(),
+            memo: document.getElementById('rec-memo').value,
+            amount: parseInt(document.getElementById('rec-amount').value),
+            category: document.getElementById('rec-category').value
+        });
+        localStorage.setItem('recurringItems', JSON.stringify(recurringItems));
+        renderRecurringList();
+        e.target.reset();
+    });
+
+    document.getElementById('ledger-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        transactions.push({
+            id: Date.now(),
+            type: document.getElementById('type').value,
+            amount: parseInt(document.getElementById('amount').value),
+            category: document.getElementById('category').value,
+            date: document.getElementById('date').value,
+            memo: document.getElementById('memo').value || document.getElementById('category').value
+        });
+        save();
+        e.target.reset();
+        document.getElementById('date').valueAsDate = new Date();
+    });
+
+    function deleteTransaction(id) { transactions = transactions.filter(t => t.id !== id); save(); }
+    function deleteRecurring(id) { recurringItems = recurringItems.filter(i => i.id !== id); localStorage.setItem('recurringItems', JSON.stringify(recurringItems)); renderRecurringList(); }
+
+    function save() {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        updateDashboard();
+        renderList();
+    }
+
+    function resetAllData() { if (confirm("데이터를 모두 지울까요?")) { localStorage.clear(); location.reload(); } }
+
+    function updateChart() {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        const expenses = transactions.filter(t => t.type === 'expense');
+        const cats = [...new Set(expenses.map(t => t.category))];
+        const data = cats.map(c => expenses.filter(t => t.category === c).reduce((s, t) => s + t.amount, 0));
+        if (chart) chart.destroy();
+        if (expenses.length === 0) return;
+        chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: cats, datasets: [{ data: data, backgroundColor: ['#3b82f6', '#ef4444', '#fbbf24', '#10b981', '#8b5cf6', '#64748b'] }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    document.getElementById('filter-container').addEventListener('click', (e) => {
+        if(e.target.tagName === 'BUTTON') {
+            document.querySelectorAll('.filter-btns button').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter;
+            renderList();
         }
+    });
 
-        // 수정 기능
-        function editDiary(id) {
-            const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-            const item = diaries.find(d => d.id === id);
-            
-            if (item) {
-                diaryInput.value = item.content;
-                selectedEmoji = item.emoji;
-                editingId = id;
-                saveBtn.innerText = '수정 완료하기';
-                
-                // 해당 이모지 버튼 활성화
-                document.querySelectorAll('.emoji-btn').forEach(btn => {
-                    if (btn.innerText === item.emoji) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                });
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-    </script>
+    updateDashboard();
+    renderList();
+    renderRecurringList();
+</script>
 </body>
 </html>
